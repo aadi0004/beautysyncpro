@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautySyncPro - Book Appointment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Book an Appointment</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Display user's existing appointments -->
+        <h2>Your Appointments</h2>
+        {% if user_appointments %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Salon</th>
+                        <th>Service</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in user_appointments %}
+                    <tr>
+                        <td>{{ appointment.salon.name }}</td>
+                        <td>{{ appointment.service.name }}</td>
+                        <td>{{ appointment.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You have no upcoming appointments.</p>
+        {% endif %}
+
+        <!-- Booking Form -->
+        <h2>Book a New Appointment</h2>
+        <form method="POST" action="{{ url_for('booking.book') }}">
+            <div class="mb-3">
+                <label for="salon_id" class="form-label">Salon</label>
+                <select class="form-control" id="salon_id" name="salon_id" required>
+                    {% for salon in salons %}
+                        <option value="{{ salon.id }}">{{ salon.name }} - {{ salon.address }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="service_id" class="form-label">Service</label>
+                <select class="form-control" id="service_id" name="service_id" required>
+                    {% for service in services %}
+                        <option value="{{ service.id }}">{{ service.name }} ({{ service.duration }} mins) at {{ service.salon.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="slot" class="form-label">Available Slots (Next 3 Days)</label>
+                <select class="form-control" id="slot" name="slot" required>
+                    {% for date, slots in available_slots %}
+                        <optgroup label="{{ date.strftime('%Y-%m-%d') }}">
+                            {% for slot in slots %}
+                                <option value="{{ slot.strftime('%Y-%m-%d %H:%M:%S') }}">{{ slot.strftime('%H:%M') }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Book Now</button>
+            <a href="{{ url_for('auth.index') }}" class="btn btn-secondary">Back</a>
+        </form>
+    </div>
+</body>
+</html>

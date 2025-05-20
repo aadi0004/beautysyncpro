@@ -1,0 +1,36 @@
+CREATE DATABASE IF NOT EXISTS beautysyncpro;
+USE beautysyncpro;
+
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(128) NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS salon (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    address VARCHAR(200) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS service (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    duration INTEGER NOT NULL,
+    salon_id INTEGER NOT NULL,
+    FOREIGN KEY (salon_id) REFERENCES salon(id)
+);
+
+CREATE TABLE IF NOT EXISTS appointment (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    user_id INTEGER NOT NULL,
+    salon_id INTEGER NOT NULL,
+    service_id INTEGER NOT NULL,
+    start_time DATETIME NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    FOREIGN KEY (user_id) REFERENCES user(id),
+    FOREIGN KEY (salon_id) REFERENCES salon(id),
+    FOREIGN KEY (service_id) REFERENCES service(id)
+);
