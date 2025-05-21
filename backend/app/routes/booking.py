@@ -9,7 +9,6 @@ bp = Blueprint('booking', __name__)
 
 @bp.route('/book', methods=['GET', 'POST'])
 def book():
-    # Require login to book
     if 'user_id' not in session:
         flash('Please log in to book an appointment.', 'error')
         return redirect(url_for('auth.login'))
@@ -18,16 +17,14 @@ def book():
     salons = Salon.query.all()
     services = Service.query.all()
     
-    # Fetch user's existing appointments
     user_appointments = Appointment.query.filter_by(user_id=user_id).all()
     
     if request.method == 'POST':
         salon_id = int(request.form['salon_id'])
         service_id = int(request.form['service_id'])
-        slot = request.form['slot']  # Format: "2025-05-20 09:00:00"
+        slot = request.form['slot']
         start_time = datetime.strptime(slot, '%Y-%m-%d %H:%M:%S')
         
-        # Check availability
         available_slots = suggest_slots(salon_id, service_id)
         slot_available = False
         for date, slots in available_slots:
@@ -44,10 +41,8 @@ def book():
         else:
             flash('Selected time slot is not available.', 'error')
     
-    # Suggest available slots for the next 3 days
     available_slots = []
     if salons and services:
-        # Default to first salon and service for slot suggestions
         available_slots = suggest_slots(salons[0].id, services[0].id)
     
     return render_template('booking.html', salons=salons, services=services, available_slots=available_slots, user_appointments=user_appointments)

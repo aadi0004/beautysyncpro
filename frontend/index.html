@@ -12,6 +12,11 @@
         <h1 class="mt-5">BeautySyncPro</h1>
         {% if user %}
             <p>Welcome, {{ user.username }}! <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Logout</a></p>
+            {% if user.user_type == 'vendor' %}
+                <a href="{{ url_for('vendor.dashboard') }}" class="btn btn-primary btn-sm">Vendor Dashboard</a>
+            {% elif user.user_type == 'customer' %}
+                <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary btn-sm">Customer Dashboard</a>
+            {% endif %}
         {% else %}
             <p>Please register or log in to book appointments.</p>
         {% endif %}
@@ -24,7 +29,6 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Display list of salons -->
         <h2>Our Salons</h2>
         <div class="row">
             {% for salon in salons %}
@@ -40,7 +44,6 @@
             {% endfor %}
         </div>
 
-        <!-- Registration and Login Forms -->
         {% if not user %}
         <div class="row mt-5">
             <div class="col-md-6">
@@ -57,6 +60,13 @@
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="user_type" class="form-label">User Type</label>
+                        <select class="form-control" id="user_type" name="user_type" required>
+                            <option value="customer">Customer</option>
+                            <option value="vendor">Vendor (Shop Owner)</option>
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Register</button>
                 </form>
@@ -78,7 +88,6 @@
         </div>
         {% endif %}
 
-        <!-- Links for All Users -->
         <div class="mt-3">
             <a href="{{ url_for('booking.book') }}" class="btn btn-success">Book Appointment</a>
             <a href="{{ url_for('admin.dashboard') }}" class="btn btn-info">Admin Dashboard</a>
@@ -86,3 +95,14 @@
     </div>
 </body>
 </html>
+
+{% if user %}
+    <p>Welcome, {{ user.username }}! <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Logout</a></p>
+    {% if user.user_type == 'vendor' %}
+        <a href="{{ url_for('vendor.dashboard') }}" class="btn btn-primary btn-sm">Vendor Dashboard</a>
+    {% elif user.user_type == 'customer' %}
+        <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary btn-sm">Customer Dashboard</a>
+    {% endif %}
+{% else %}
+    <p>Please register or log in to book appointments.</p>
+{% endif %}
