@@ -6,41 +6,39 @@ from backend.app import create_app, db
 from backend.app.models.user import User
 from backend.app.models.salon import Salon
 from backend.app.models.appointment import Service, Appointment
-# from flask_migrate import upgrade
+from flask_migrate import upgrade
 from datetime import datetime
 from werkzeug.security import generate_password_hash
-from sqlalchemy import and_
 
 app = create_app()
 
 with app.app_context():
     # Apply database migrations
-    # upgrade()
+    upgrade()
     
-    # Check and create the superuser
+    # Seed superuser
     superuser_email = 'aditya768888@gmail.com'
     superuser = User.query.filter_by(email=superuser_email).first()
     if not superuser:
         superuser = User(
             username='aditya_superuser',
             email=superuser_email,
-            user_type='vendor',  # Superuser can also be a vendor for simplicity
+            user_type='vendor',
             is_admin=True
         )
         superuser.set_password('aditya230f')
         db.session.add(superuser)
         db.session.commit()
     else:
-        # Ensure the superuser's password and admin status are correct
         superuser.is_admin = True
         superuser.set_password('aditya230f')
         db.session.commit()
 
-    # Ensure no other users are admins
-    User.query.filter(User.email != superuser_email, User.is_admin == True).update({'is_admin': False})
+    # Ensure only the superuser is an admin
+    User.query.filter((User.email != superuser_email) & (User.is_admin == True)).update({'is_admin': False})
     db.session.commit()
 
-    # Seed other users if none exist (excluding superuser)
+    # Seed users if none exist (excluding superuser)
     if User.query.filter(User.email != superuser_email).count() == 0:
         users = [
             ('alice', 'alice@example.com', 'customer'),
@@ -66,10 +64,8 @@ with app.app_context():
         db.session.commit()
 
     if not Salon.query.first():
-        vendors = User.query.filter(
-            User.user_type == 'vendor',
-            User.email != superuser_email
-        ).all()
+        # Fixed query: Use filter_by for exact match, filter for comparison
+        vendors = User.query.filter_by(user_type='vendor').filter(User.email != superuser_email).all()
         vendor_ids = [vendor.id for vendor in vendors]
 
         salons = [
@@ -132,4 +128,10 @@ with app.app_context():
         db.session.commit()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Check if running in production (Docker) or development
+    if os.getenv('FLASK_ENV') == 'production':
+        # In production, rely on gunicorn (invoked via CMD in Dockerfile)
+        pass
+    else:
+        # In development, use Flask's built-in server
+        app.run(debug=True, host='0.0.0.0', port=5000)

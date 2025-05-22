@@ -1,31 +1,41 @@
-version: '3.8'
-
 services:
-  backend:
+  app:
     build:
       context: .
-      dockerfile: docker/backend.Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-    env_file:
-      - .env
     depends_on:
-      - mysql
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - FLASK_ENV=production
     volumes:
       - .:/app
+    networks:
+      - beautysyncpro-network
 
-  mysql:
-    image: mysql:8.0
+  db:
+    image: mysql:8.0.42
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: beautysyncpro
+      - MYSQL_ROOT_PASSWORD=mysqlpass123
+      - MYSQL_DATABASE=beautysyncpro
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./database/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmysqlpass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beautysyncpro-network
+
+networks:
+  beautysyncpro-network:
+    driver: bridge
 
 volumes:
-  mysql-data:
+  db-data:
