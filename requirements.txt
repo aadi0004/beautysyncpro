@@ -6,3 +6,7 @@ mysql-connector-python==8.4.0
 python-dotenv==1.0.1
 Flask-Mail
 gunicorn==20.1.0  # Add this line
+
+Flask-Migrate==4.0.5
+pymysql==1.0.2
+gunicorn==20.1.0

@@ -1,5 +1,10 @@
 import sys
 import os
+from datetime import datetime
+from backend.app import create_app, db
+from flask_migrate import Migrate
+from backend.app.models import * 
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from backend.app import create_app, db
@@ -7,16 +12,13 @@ from backend.app.models.user import User
 from backend.app.models.salon import Salon
 from backend.app.models.appointment import Service, Appointment
 from flask_migrate import upgrade
-from datetime import datetime
-from werkzeug.security import generate_password_hash
 
 app = create_app()
+migrate = Migrate(app, db)
 
-with app.app_context():
-    # Apply database migrations
-    upgrade()
-    
-    # Seed superuser
+
+def seed_database():
+    # Superuser creation
     superuser_email = 'aditya768888@gmail.com'
     superuser = User.query.filter_by(email=superuser_email).first()
     if not superuser:
@@ -34,7 +36,7 @@ with app.app_context():
         superuser.set_password('aditya230f')
         db.session.commit()
 
-    # Ensure only the superuser is an admin
+    # Ensure only superuser is admin
     User.query.filter((User.email != superuser_email) & (User.is_admin == True)).update({'is_admin': False})
     db.session.commit()
 
@@ -53,21 +55,15 @@ with app.app_context():
             ('vendor5', 'vendor5@example.com', 'vendor'),
         ]
         for username, email, user_type in users:
-            user = User(
-                username=username,
-                email=email,
-                user_type=user_type,
-                is_admin=False
-            )
+            user = User(username=username, email=email, user_type=user_type)
             user.set_password('password123')
             db.session.add(user)
         db.session.commit()
 
+    # Seed salons
     if not Salon.query.first():
-        # Fixed query: Use filter_by for exact match, filter for comparison
         vendors = User.query.filter_by(user_type='vendor').filter(User.email != superuser_email).all()
         vendor_ids = [vendor.id for vendor in vendors]
-
         salons = [
             ('Glow Haven Spa', '123 Main St, Mumbai', vendor_ids[0]),
             ('Radiance Salon', '456 Oak Ave, Delhi', vendor_ids[1]),
@@ -81,10 +77,10 @@ with app.app_context():
             ('Vogue Wellness', '707 Spruce Ln, Surat', vendor_ids[4]),
         ]
         for name, address, vendor_id in salons:
-            salon = Salon(name=name, address=address, vendor_id=vendor_id)
-            db.session.add(salon)
+            db.session.add(Salon(name=name, address=address, vendor_id=vendor_id))
         db.session.commit()
 
+    # Seed services
     if not Service.query.first():
         services = [
             ('Facial', 60, 1),
@@ -99,10 +95,10 @@ with app.app_context():
             ('Nail Art', 45, 8),
         ]
         for name, duration, salon_id in services:
-            service = Service(name=name, duration=duration, salon_id=salon_id)
-            db.session.add(service)
+            db.session.add(Service(name=name, duration=duration, salon_id=salon_id))
         db.session.commit()
 
+    # Seed appointments
     if not Appointment.query.first():
         appointments = [
             (1, 1, 1, datetime(2025, 5, 20, 19, 0), 'confirmed'),
@@ -117,21 +113,15 @@ with app.app_context():
             (5, 8, 10, datetime(2025, 5, 22, 12, 0), 'pending'),
         ]
         for user_id, salon_id, service_id, start_time, status in appointments:
-            appointment = Appointment(
-                user_id=user_id,
-                salon_id=salon_id,
-                service_id=service_id,
-                start_time=start_time,
-                status=status
-            )
-            db.session.add(appointment)
+            db.session.add(Appointment(user_id=user_id, salon_id=salon_id, service_id=service_id, start_time=start_time, status=status))
         db.session.commit()
 
+with app.app_context():
+    upgrade()           # 🔄 Apply migrations safely
+    seed_database()     # ✅ Only seed AFTER upgrade
+
 if __name__ == '__main__':
-    # Check if running in production (Docker) or development
     if os.getenv('FLASK_ENV') == 'production':
-        # In production, rely on gunicorn (invoked via CMD in Dockerfile)
-        pass
+        pass  # Let Gunicorn handle it
     else:
-        # In development, use Flask's built-in server
         app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1,22 +1,10 @@
-# Use an official Python runtime as the base image
-FROM python:3.9-slim
+# Dockerfile for frontend (serving static content)
 
-# Set working directory
-WORKDIR /app
+FROM nginx:alpine
 
-# Copy requirements.txt and install dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY frontend/ /usr/share/nginx/html/
 
-# Copy the entire project (backend and frontend)
-COPY . .
+EXPOSE 80
 
-# Set environment variables
-ENV FLASK_ENV=production
-ENV FLASK_APP=run.py
-
-# Expose the port the app runs on
-EXPOSE 5000
-
-# Run migrations and start the app with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
+CMD ["nginx", "-g", "daemon off;"]

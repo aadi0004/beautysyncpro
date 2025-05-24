@@ -8,5 +8,4 @@ venv/
 .git
 .gitignore
 .env
-migrations/
 *.md

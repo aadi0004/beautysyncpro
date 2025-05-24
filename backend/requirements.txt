@@ -1,6 +1,6 @@
 Flask==2.3.2
 Flask-SQLAlchemy==3.0.5
-Flask-Migrate==4.0.4
+Flask-Migrate==4.0.5
 Flask-Mail==0.9.1
 mysql-connector-python==8.0.33
 Werkzeug==2.3.6

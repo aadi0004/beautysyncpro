@@ -5,46 +5,43 @@ services:
     build:
       context: .
       dockerfile: backend/backend.Dockerfile
-    container_name: backend_container
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=production
-      - DATABASE_URL=mysql+pymysql://root:aditya230f@db:3306/beautysyncpro
+    env_file:
+      - .env
     depends_on:
       - db
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
     networks:
-      - app-network
+      - beautysyncpro-network
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend_container
+      context: .
+      dockerfile: frontend/frontend.Dockerfile
     ports:
       - "80:80"
     networks:
-      - app-network
+      - beautysyncpro-network
 
   db:
     image: mysql:8.0
-    container_name: mysql_container
-    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: aditya230f
-      MYSQL_DATABASE: beautysyncpro
-      MYSQL_USER: root
-      MYSQL_PASSWORD: aditya230f
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/init_db.sql:/docker-entrypoint-initdb.d/1-init_db.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/2-seed_data.sql
     ports:
       - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
     networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - beautysyncpro-network
 
 volumes:
-  mysql-data:
+  db_data:
+
+networks:
+  beautysyncpro-network:
+    driver: bridge
