@@ -19,4 +19,4 @@ ENV FLASK_APP=run.py
 EXPOSE 5000
 
 # Run migrations and start the app with gunicorn
-CMD ["sh", "-c", "python run.py && gunicorn --bind 0.0.0.0:5000 run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
